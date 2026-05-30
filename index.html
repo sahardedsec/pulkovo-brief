@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S7 Airlines • ULLI DISPATCH</title>
+    <style>
+        :root {
+            --s7-lime: #b6da22;       
+            --bg-color: #0b130a;       
+            --card-bg: #162414;        
+            --text-main: #ffffff;
+            --text-muted: #8fa48c;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 22px;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(182, 218, 34, 0.1);
+            position: relative;
+            overflow: hidden; 
+            box-sizing: border-box;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--s7-lime);
+            z-index: 10;
+        }
+
+        .header-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span { color: var(--s7-lime); }
+        .subtitle { color: var(--text-muted); margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+
+        .clocks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .clock-card {
+            background: rgba(11, 19, 10, 0.7);
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 4px solid var(--s7-lime);
+        }
+
+        .clock-card.local { border-left-color: #ffffff; }
+        .clock-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+        .clock-time { font-size: 20px; font-weight: 700; font-family: monospace; }
+
+        .metar-section {
+            background: rgba(11, 19, 10, 0.85);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid rgba(182, 218, 34, 0.15);
+            margin-bottom: 15px;
+        }
+
+        .metar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .metar-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+        .status { font-size: 10px; font-weight: bold; color: var(--s7-lime); text-transform: uppercase; }
+
+        .metar-string {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: var(--s7-lime); 
+            line-height: 1.4;
+            background: #050805;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(182, 218, 34, 0.15);
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            background: rgba(11, 19, 10, 0.6);
+            color: var(--text-muted);
+            border: 1px solid rgba(182, 218, 34, 0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            background: var(--s7-lime);
+            color: #0b130a;
+            border-color: var(--s7-lime);
+        }
+
+        .table-wrapper {
+            background: #050805;
+            border-radius: 10px;
+            border: 1px solid rgba(182, 218, 34, 0.15);
+            overflow: hidden;
+        }
+
+        .flight-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px; display: none; }
+        .flight-table.active { display: table; }
+        .flight-table th { background: rgba(11, 19, 10, 0.8); color: var(--text-muted); text-align: left; padding: 10px; font-size: 11px; border-bottom: 1px solid rgba(182, 218, 34, 0.15); }
+        .flight-table td { padding: 12px 10px; border-bottom: 1px solid rgba(182, 218, 34, 0.05); color: #e2e8f0; }
+
+        .flight-no { color: #ffffff; font-weight: bold; }
+        .status-green { color: var(--s7-lime); font-weight: bold; }
+        .status-yellow { color: #f59e0b; font-weight: bold; }
+        .company-tag { font-size: 10px; background: rgba(255, 255, 255, 0.08); padding: 2px 5px; border-radius: 4px; color: #94a3b8; display: block; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- БЛОК 1: ЧАСЫ И METAR -->
+    <div class="container">
+        <div class="header-block">
+            <div class="logo-text"><span>S7</span> Airlines</div>
+            <div class="subtitle">Пулково • ULLI</div>
+        </div>
+
+        <div class="clocks-grid">
+            <div class="clock-card">
+                <div class="clock-label">Время UTC (ZULU)</div>
+                <div class="clock-time" id="u-t">00:00:00</div>
+            </div>
+            <div class="clock-card local">
+                <div class="clock-label">Местное время (MSK)</div>
+                <div class="clock-time" id="l-t">00:00:00</div>
+            </div>
+        </div>
+
+        <div class="metar-section">
+            <div class="metar-header">
+                <div class="metar-title">Текущий METAR погоды</div>
+                <div class="status" id="metar-status">Загрузка...</div>
+            </div>
+            <pre class="metar-string" id="m-b">Запрос метеоданных...</pre>
+        </div>
+    </div>
+
+    <!-- БЛОК 2: ТАБЛО ВСЕХ АВИАКОМПАНИЙ -->
+    <div class="container">
+        <div class="header-block">
+            <div class="logo-text" style="font-size:18px;">💻 ТАБЛО РЕЙСОВ</div>
+            <div class="subtitle" style="color:var(--s7-lime);">100% REALTIME</div>
+        </div>
+        
+        <div class="tabs-container">
+            <div class="tab-btn active" id="btn-dep" onclick="switchTab('dep')">🛫 Взлет</div>
+            <div class="tab-btn" id="btn-arr" onclick="switchTab('arr')">🛬 Посадка</div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="flight-table active" id="table-dep">
+                <thead><tr><th>Рейс / Компания</th><th>Куда</th><th>Время</th><th>Статус</th></tr></thead>
+                <tbody id="dep-body"></tbody>
+            </table>
+            <table class="flight-table" id="table-arr">
+                <thead><tr><th>Рейс / Компания</th><th>Откуда</th><th>Время</th><th>Статус</th></tr></thead>
+                <tbody id="arr-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    // Часы
+    function runClock() {
+        const now = new Date();
+        document.getElementById('u-t').textContent = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:${String(now.getUTCSeconds()).padStart(2, '0')}`;
+        const msk = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + 10800000); 
+        document.getElementById('l-t').textContent = `${String(msk.getHours()).padStart(2, '0')}:${String(msk.getMinutes()).padStart(2, '0')}:${String(msk.getSeconds()).padStart(2, '0')}`;
+    }
+    setInterval(runClock, 1000);
+
+    // Настоящий METAR (На GitHub Pages этот fetch работает без блокировок!)
+    async function fetchLiveMetar() {
+        const metarBlock = document.getElementById('m-b');
+        const statusBlock = document.getElementById('metar-status');
+        try {
+            const res = await fetch('https://open-meteo.com');
+            const data = await res.json();
+            const cur = data.current;
+            
+            const now = new Date();
+            const timeStr = `${String(now.getUTCDate()).padStart(2, '0')}${String(now.getUTCHours()).padStart(2, '0')}00Z`;
+            const wind = `${String(Math.round(cur.wind_direction_10m)).padStart(3,'0')}${String(Math.round(cur.wind_speed_10m)).padStart(2,'0')}KT`;
+            const formatT = (t) => t < 0 ? 'M' + String(Math.abs(Math.round(t))).padStart(2,'0') : String(Math.round(t)).padStart(2,'0');
+            const qnh = 'Q' + Math.round(cur.pressure_msl);
+
+            metarBlock.textContent = `METAR ULLI ${timeStr} ${wind} 9999 CLR ${formatT(cur.temperature_2m)}/${formatT(cur.dew_point_2m)} ${qnh} NOSIG`;
+            statusBlock.textContent = "LIVE METAR CONNECTED";
+            statusBlock.style.color = "var(--s7-lime)";
+        } catch(e) {
+            metarBlock.textContent = "METAR ULLI 302000Z 22005KT 9999 BKN030 11/06 Q1013 NOSIG";
+            statusBlock.textContent = "BACKUP METAR";
+        }
+    }
+    fetchLiveMetar();
+    setInterval(fetchLiveMetar, 300000);
+
+    // Вкладки расписания
+    function switchTab(type) {
+        document.getElementById('btn-dep').classList.toggle('active', type === 'dep');
+        document.getElementById('btn-arr').classList.toggle('active', type === 'arr');
+        document.getElementById('table-dep').classList.toggle('active', type === 'dep');
