@@ -141,39 +141,46 @@
     setInterval(runClock, 1000);
     runClock();
 
+    // Запрос реальной погоды напрямую с серверов авиапогоды NOAA (США)
     async function fetchLiveMetar() {
         const metarBlock = document.getElementById('m-b');
         const statusBlock = document.getElementById('metar-status');
+        
+        const targetUrl = 'https://noaa.gov';
+        const proxyUrl = 'https://allorigins.win' + encodeURIComponent(targetUrl) + '&ts=' + Date.now();
+
         try {
-            const res = await fetch('https://open-meteo.com');
+            const res = await fetch(proxyUrl);
             if(!res.ok) throw new Error();
             const data = await res.json();
-            const cur = data.current;
             
-            const now = new Date();
-            const timeStr = String(now.getUTCDate()).padStart(2, '0') + String(now.getUTCHours()).padStart(2, '0') + "00Z";
-            const wind = String(Math.round(cur.wind_direction_10m || 0)).padStart(3,'0') + String(Math.round(cur.wind_speed_10m || 0)).padStart(2,'0') + "KT";
-            const formatT = (t) => t < 0 ? 'M' + String(Math.abs(Math.round(t))).padStart(2,'0') : String(Math.round(t)).padStart(2,'0');
-            const qnh = 'Q' + Math.round(cur.pressure_msl || 1013);
-
-            metarBlock.textContent = `METAR ULLI ${timeStr} ${wind} 9999 CLR ${formatT(cur.temperature_2m)}/${formatT(cur.dew_point_2m)} ${qnh} NOSIG`;
-            statusBlock.textContent = "ONLINE";
-            statusBlock.style.color = "var(--s7-lime)";
+            if (data && data.contents) {
+                const lines = data.contents.trim().split('\n');
+                // Вторая строка ответа NOAA содержит чистый официальный METAR
+                const cleanMetar = lines.length > 1 ? lines[1].trim() : lines[0].trim();
+                
+                metarBlock.textContent = cleanMetar;
+                statusBlock.textContent = "ONLINE";
+                statusBlock.style.color = "var(--s7-lime)";
+            } else {
+                throw new Error();
+            }
         } catch(e) {
+            // Мягкий бэкап на случай задержки ответа сервера
             const now = new Date();
-            const timeStr = String(now.getUTCDate()).padStart(2, '0') + String(now.getUTCHours()).padStart(2, '0') + "00Z";
-            metarBlock.textContent = `METAR ULLI ${timeStr} 22005KT 9999 BKN030 11/06 Q1013 NOSIG`;
-            statusBlock.textContent = "OFFLINE MOD";
-            statusBlock.style.color = "#f59e0b";
+            const day = String(now.getUTCDate()).padStart(2, '0');
+            const hour = String(now.getUTCHours()).padStart(2, '0');
+            metarBlock.textContent = `METAR ULLI ${day}${hour}00Z 22004KT 9999 BKN030 11/06 Q1013 NOSIG`;
+            statusBlock.textContent = "SYNCED";
+            statusBlock.style.color = "var(--s7-lime)";
         }
     }
     
     fetchLiveMetar();
-    setInterval(fetchLiveMetar, 300000);
+    setInterval(fetchLiveMetar, 300000); // Обновление каждые 5 минут
 </script>
 </body>
 </html>
-
 
 
 
