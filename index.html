@@ -234,10 +234,6 @@
             min-width: 250px;
         }
 
-        .station-select:hover {
-            border-color: var(--s7-lime);
-        }
-
         .radio-info {
             flex: 1;
         }
@@ -363,13 +359,6 @@
             color: #363838;
         }
 
-        .retry-info {
-            font-size: 0.65rem;
-            color: var(--text-tertiary);
-            margin: 0 24px 20px;
-            text-align: center;
-        }
-
         footer {
             margin-top: 32px;
             text-align: center;
@@ -424,7 +413,7 @@
         </button>
     </div>
 
-    <!-- Радио плеер -->
+    <!-- Радио плеер с выбором станций -->
     <div class="radio-card">
         <div class="radio-header">
             <h3>🎵 S7 Lounge Radio</h3>
@@ -466,13 +455,12 @@
         </div>
         <div class="raw-metar" id="metarRaw">⏳ Получение данных...</div>
         <button class="refresh-btn" id="refreshMetar">🔄 Обновить METAR</button>
-        <div class="retry-info" id="retryInfo"></div>
     </div>
 
     <footer>
         <div class="footer-badge">✈️ S7 Airlines | Точная авиаметеосводка</div>
         <div class="footer-badge">🎵 4 радиостанции на выбор</div>
-        <div class="footer-badge">🌦️ METAR с автообновлением</div>
+        <div class="footer-badge">🔄 METAR обновляется каждые 10 минут</div>
     </footer>
 </div>
 
@@ -575,39 +563,33 @@
     
     audio.addEventListener('pause', () => { isPlaying = false; updateRadioUI(); });
     audio.addEventListener('play', () => { isPlaying = true; updateRadioUI(); });
+    audio.addEventListener('error', () => {
+        isPlaying = false;
+        updateRadioUI();
+        statusText.innerHTML = 'Ошибка потока';
+        setTimeout(() => { if (!isPlaying) statusText.innerHTML = 'Остановлено'; }, 3000);
+    });
     volumeSlider.addEventListener('input', (e) => { audio.volume = e.target.value / 100; });
     updateRadioUI();
 
-    // ======================= METAR (простой и надёжный) =======================
+    // ======================= METAR =======================
     async function fetchMETAR() {
         const metarDiv = document.getElementById('metarRaw');
         const timeSpan = document.getElementById('metarTimeStamp');
-        const retryDiv = document.getElementById('retryInfo');
-        
         metarDiv.innerHTML = '⏳ Загрузка METAR... ✈️';
-        retryDiv.innerHTML = '🔄 Подключение к авиационному серверу...';
-        
         try {
-            // Используем прямой запрос к aviationweather.gov через прокси
-            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json');
-            const response = await fetch(proxyUrl);
-            const data = await response.json();
-            
-            if (!data.contents) throw new Error('Нет данных');
-            
-            const metarArray = JSON.parse(data.contents);
-            if (!metarArray || metarArray.length === 0) throw new Error('Нет METAR');
-            
-            const metar = metarArray[0];
+            const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json');
+            const response = await fetch(url);
+            const proxyData = await response.json();
+            if (!proxyData.contents) throw new Error('Нет данных');
+            const metarData = JSON.parse(proxyData.contents);
+            if (!metarData || metarData.length === 0) throw new Error('METAR не найден');
+            const metar = metarData[0];
             const rawMetar = metar.rawOb || 'Данные отсутствуют';
-            
-            // Парсим время
             let timeStr = '';
             const timeMatch = rawMetar.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
             if (timeMatch) {
-                const day = timeMatch[1];
-                const hour = timeMatch[2];
-                const minute = timeMatch[3];
+                const day = timeMatch[1], hour = timeMatch[2], minute = timeMatch[3];
                 const now = new Date();
                 const month = String(now.getUTCMonth() + 1).padStart(2, '0');
                 const year = now.getUTCFullYear();
@@ -615,24 +597,11 @@
             } else {
                 timeStr = new Date().toLocaleString('ru-RU', { timeZone: 'UTC' });
             }
-            
             metarDiv.innerHTML = `<span style="color: var(--s7-lime); font-weight: 700;">✈️ METAR ULLI</span><br><strong style="font-size: 0.9rem;">${rawMetar}</strong>`;
             timeSpan.innerHTML = `🕒 сводка от ${timeStr}`;
-            retryDiv.innerHTML = '✅ Данные успешно получены';
-            retryDiv.style.color = 'var(--s7-lime)';
-            
-            setTimeout(() => {
-                if (retryDiv.innerHTML === '✅ Данные успешно получены') {
-                    retryDiv.innerHTML = '';
-                }
-            }, 3000);
-            
         } catch (error) {
-            console.error('METAR error:', error);
-            metarDiv.innerHTML = '<span class="error-text">❌ Временная ошибка загрузки METAR. Нажмите "Обновить" для повторной попытки.</span>';
-            timeSpan.innerHTML = '🕒 ошибка соединения';
-            retryDiv.innerHTML = '⚠️ Сервер временно недоступен, попробуйте позже';
-            retryDiv.style.color = 'var(--error-color)';
+            metarDiv.innerHTML = '<span class="error-text">❌ Ошибка загрузки METAR. Нажмите "Обновить".</span>';
+            timeSpan.innerHTML = '🕒 ошибка';
         }
     }
     
@@ -646,7 +615,6 @@
         btn.disabled = false;
     }
     
-    // Запускаем METAR
     fetchMETAR();
     document.getElementById('refreshMetar').addEventListener('click', refreshMETAR);
     setInterval(fetchMETAR, 600000);
