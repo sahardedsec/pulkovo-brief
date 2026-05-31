@@ -231,7 +231,7 @@
             font-size: 0.85rem;
             cursor: pointer;
             font-weight: 500;
-            min-width: 220px;
+            min-width: 250px;
         }
 
         .station-select:hover {
@@ -448,6 +448,7 @@
                     <option value="https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream">🎷 Megaton Cafe Radio — Jazz, Swing, Vintage</option>
                     <option value="https://az1.mediacp.eu/listen/airport-lounge-radio/stream/1/">✈️ Airport Lounge Radio — Ambient, Lounge, Chillout</option>
                     <option value="http://emgspb.hostingradio.ru:80/europaplusspb128.mp3">🎧 Europa Plus Санкт-Петербург — Dance, Pop, Hit</option>
+                    <option value="http://hermitage.hostingradio.ru:80/hermitage128.mp3">🎼 Radio Hermitage — Classic, Relax, Melody</option>
                 </select>
                 <div class="radio-info">
                     <div class="station-name">
@@ -491,7 +492,7 @@
 
     <footer>
         <div class="footer-badge">✈️ S7 Airlines | Точная авиаметеосводка</div>
-        <div class="footer-badge">🎵 Megaton Cafe • Airport Lounge • Europa Plus</div>
+        <div class="footer-badge">🎵 4 радиостанции на выбор</div>
         <div class="footer-badge">🔄 METAR обновляется каждые 10 минут</div>
     </footer>
 </div>
@@ -534,7 +535,7 @@
     setInterval(updateClocks, 1000);
     updateClocks();
 
-    // ======================= РАДИО ПЛЕЕР С ТРЕМЯ СТАНЦИЯМИ =======================
+    // ======================= РАДИО ПЛЕЕР =======================
     const audio = new Audio();
     let isPlaying = false;
     let currentStationUrl = "https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream";
@@ -551,7 +552,8 @@
     const stationNames = {
         "https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream": "Megaton Cafe Radio",
         "https://az1.mediacp.eu/listen/airport-lounge-radio/stream/1/": "Airport Lounge Radio",
-        "http://emgspb.hostingradio.ru:80/europaplusspb128.mp3": "Europa Plus Санкт-Петербург"
+        "http://emgspb.hostingradio.ru:80/europaplusspb128.mp3": "Europa Plus Санкт-Петербург",
+        "http://hermitage.hostingradio.ru:80/hermitage128.mp3": "Radio Hermitage"
     };
     
     function updateRadioUI() {
@@ -694,7 +696,5 @@
     document.getElementById('refreshMetar').addEventListener('click', refreshMETAR);
     setInterval(fetchMETAR, 600000);
 </script>
-</body>
-</html>
 </body>
 </html>
