@@ -321,15 +321,6 @@
             border-bottom: 2px solid var(--s7-lime);
         }
 
-        .metar-title {
-            font-weight: 700;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-primary);
-        }
-
         .metar-title .icao {
             background: var(--s7-lime);
             padding: 4px 14px;
@@ -337,16 +328,6 @@
             font-size: 0.75rem;
             color: #363838;
             font-weight: 700;
-        }
-
-        .metar-time {
-            font-size: 0.7rem;
-            color: var(--text-tertiary);
-            font-family: monospace;
-            background: var(--metar-bg);
-            padding: 5px 14px;
-            border-radius: 30px;
-            border: 1px solid var(--border-dim);
         }
 
         .raw-metar {
@@ -380,6 +361,13 @@
         .refresh-btn:hover {
             background: var(--s7-lime);
             color: #363838;
+        }
+
+        .retry-info {
+            font-size: 0.65rem;
+            color: var(--text-tertiary);
+            margin: 0 24px 20px;
+            text-align: center;
         }
 
         footer {
@@ -436,7 +424,7 @@
         </button>
     </div>
 
-    <!-- Радио плеер с выбором станций -->
+    <!-- Радио плеер -->
     <div class="radio-card">
         <div class="radio-header">
             <h3>🎵 S7 Lounge Radio</h3>
@@ -473,27 +461,18 @@
     <!-- METAR карточка -->
     <div class="metar-card">
         <div class="metar-header">
-            <div class="metar-title">
-                <span>🌦️ METAR</span>
-                <span class="icao">ULLI</span>
-                <span>Аэропорт Пулково</span>
-            </div>
+            <div class="metar-title"><span>🌦️ METAR</span><span class="icao">ULLI</span></div>
             <div class="metar-time" id="metarTimeStamp">🕒 загрузка...</div>
         </div>
-        
-        <div class="raw-metar" id="metarRaw">
-            ⏳ Получение данных с aviationweather.gov...
-        </div>
-        
-        <button class="refresh-btn" id="refreshMetar">
-            🔄 Обновить METAR
-        </button>
+        <div class="raw-metar" id="metarRaw">⏳ Получение данных...</div>
+        <button class="refresh-btn" id="refreshMetar">🔄 Обновить METAR</button>
+        <div class="retry-info" id="retryInfo"></div>
     </div>
 
     <footer>
         <div class="footer-badge">✈️ S7 Airlines | Точная авиаметеосводка</div>
         <div class="footer-badge">🎵 4 радиостанции на выбор</div>
-        <div class="footer-badge">🔄 METAR обновляется каждые 10 минут</div>
+        <div class="footer-badge">🌦️ METAR с автообновлением</div>
     </footer>
 </div>
 
@@ -570,27 +549,12 @@
     
     function changeStation() {
         const wasPlaying = isPlaying;
-        
-        if (wasPlaying) {
-            audio.pause();
-        }
-        
+        if (wasPlaying) audio.pause();
         currentStationUrl = stationSelect.value;
         audio.src = currentStationUrl;
         currentStationNameSpan.textContent = stationNames[currentStationUrl] || "Радио";
-        
         if (wasPlaying) {
-            audio.play().then(() => {
-                isPlaying = true;
-                updateRadioUI();
-            }).catch(() => {
-                isPlaying = false;
-                updateRadioUI();
-                statusText.innerHTML = 'Ошибка';
-                setTimeout(() => {
-                    if (!isPlaying) statusText.innerHTML = 'Остановлено';
-                }, 2000);
-            });
+            audio.play().then(() => { isPlaying = true; updateRadioUI(); }).catch(() => { isPlaying = false; updateRadioUI(); });
         }
     }
     
@@ -602,63 +566,42 @@
             isPlaying = false;
             updateRadioUI();
         } else {
-            audio.play().then(() => {
-                isPlaying = true;
-                updateRadioUI();
-            }).catch(() => {
+            audio.play().then(() => { isPlaying = true; updateRadioUI(); }).catch(() => {
                 statusText.innerHTML = 'Ошибка потока';
-                setTimeout(() => {
-                    if (!isPlaying) statusText.innerHTML = 'Остановлено';
-                }, 2000);
+                setTimeout(() => { if (!isPlaying) statusText.innerHTML = 'Остановлено'; }, 2000);
             });
         }
     });
     
-    audio.addEventListener('pause', () => {
-        isPlaying = false;
-        updateRadioUI();
-    });
-    
-    audio.addEventListener('play', () => {
-        isPlaying = true;
-        updateRadioUI();
-    });
-    
-    audio.addEventListener('error', () => {
-        isPlaying = false;
-        updateRadioUI();
-        statusText.innerHTML = 'Ошибка потока';
-        setTimeout(() => {
-            if (!isPlaying) statusText.innerHTML = 'Остановлено';
-        }, 3000);
-    });
-    
-    volumeSlider.addEventListener('input', (e) => {
-        audio.volume = e.target.value / 100;
-    });
-    
+    audio.addEventListener('pause', () => { isPlaying = false; updateRadioUI(); });
+    audio.addEventListener('play', () => { isPlaying = true; updateRadioUI(); });
+    volumeSlider.addEventListener('input', (e) => { audio.volume = e.target.value / 100; });
     updateRadioUI();
 
-    // ======================= METAR =======================
+    // ======================= METAR (простой и надёжный) =======================
     async function fetchMETAR() {
         const metarDiv = document.getElementById('metarRaw');
         const timeSpan = document.getElementById('metarTimeStamp');
+        const retryDiv = document.getElementById('retryInfo');
         
         metarDiv.innerHTML = '⏳ Загрузка METAR... ✈️';
+        retryDiv.innerHTML = '🔄 Подключение к авиационному серверу...';
         
         try {
-            const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json');
-            const response = await fetch(url);
-            const proxyData = await response.json();
+            // Используем прямой запрос к aviationweather.gov через прокси
+            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json');
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
             
-            if (!proxyData.contents) throw new Error('Нет данных');
+            if (!data.contents) throw new Error('Нет данных');
             
-            const metarData = JSON.parse(proxyData.contents);
-            if (!metarData || metarData.length === 0) throw new Error('METAR не найден');
+            const metarArray = JSON.parse(data.contents);
+            if (!metarArray || metarArray.length === 0) throw new Error('Нет METAR');
             
-            const metar = metarData[0];
+            const metar = metarArray[0];
             const rawMetar = metar.rawOb || 'Данные отсутствуют';
             
+            // Парсим время
             let timeStr = '';
             const timeMatch = rawMetar.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
             if (timeMatch) {
@@ -675,10 +618,21 @@
             
             metarDiv.innerHTML = `<span style="color: var(--s7-lime); font-weight: 700;">✈️ METAR ULLI</span><br><strong style="font-size: 0.9rem;">${rawMetar}</strong>`;
             timeSpan.innerHTML = `🕒 сводка от ${timeStr}`;
+            retryDiv.innerHTML = '✅ Данные успешно получены';
+            retryDiv.style.color = 'var(--s7-lime)';
+            
+            setTimeout(() => {
+                if (retryDiv.innerHTML === '✅ Данные успешно получены') {
+                    retryDiv.innerHTML = '';
+                }
+            }, 3000);
             
         } catch (error) {
-            metarDiv.innerHTML = '<span class="error-text">❌ Ошибка загрузки METAR</span>';
-            timeSpan.innerHTML = '🕒 ошибка';
+            console.error('METAR error:', error);
+            metarDiv.innerHTML = '<span class="error-text">❌ Временная ошибка загрузки METAR. Нажмите "Обновить" для повторной попытки.</span>';
+            timeSpan.innerHTML = '🕒 ошибка соединения';
+            retryDiv.innerHTML = '⚠️ Сервер временно недоступен, попробуйте позже';
+            retryDiv.style.color = 'var(--error-color)';
         }
     }
     
@@ -692,6 +646,7 @@
         btn.disabled = false;
     }
     
+    // Запускаем METAR
     fetchMETAR();
     document.getElementById('refreshMetar').addEventListener('click', refreshMETAR);
     setInterval(fetchMETAR, 600000);
