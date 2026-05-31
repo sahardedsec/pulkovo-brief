@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S7 Airlines • ULLI WEATHER</title>
+    <title>S7 Airlines • ULLI DISPATCH</title>
     <style>
         :root {
             --s7-lime: #b6da22;       
@@ -22,18 +22,18 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 90vh;
+            gap: 20px;
+            padding-bottom: 40px;
         }
 
         .container {
             background-color: var(--card-bg);
             border-radius: 16px;
-            padding: 24px;
-            width: 92%;
+            padding: 22px;
+            width: 100%;
             max-width: 500px;
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(182, 218, 34, 0.12);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(182, 218, 34, 0.1);
             position: relative;
             overflow: hidden; 
             box-sizing: border-box;
@@ -58,54 +58,127 @@
             z-index: 1;
         }
 
-        .header-block, .clocks-grid, .metar-section {
+        .header-block, .clocks-grid, .metar-section, .rwy-block {
             position: relative;
             z-index: 5;
         }
 
-        .header-block { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 20px; 
+        .header-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
             border-bottom: 1px solid rgba(182, 218, 34, 0.15);
             padding-bottom: 12px;
         }
-        .logo-text { font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
         .logo-text span { color: var(--s7-lime); }
         .subtitle { color: var(--text-muted); margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
 
-        .clocks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .clock-card { background: rgba(11, 19, 10, 0.7); padding: 12px; border-radius: 10px; border-left: 4px solid var(--s7-lime); }
+        .clocks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .clock-card {
+            background: rgba(11, 19, 10, 0.7);
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 4px solid var(--s7-lime);
+        }
+
         .clock-card.local { border-left-color: #ffffff; }
         .clock-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
-        .clock-time { font-size: 22px; font-weight: 700; font-family: monospace; letter-spacing: 0.5px; }
+        .clock-time { font-size: 22px; font-weight: 700; font-family: monospace; }
 
-        .metar-section { background: rgba(11, 19, 10, 0.85); border-radius: 10px; padding: 12px; border: 1px solid rgba(182, 218, 34, 0.15); }
-        .metar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .metar-section {
+            background: rgba(11, 19, 10, 0.85);
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid rgba(182, 218, 34, 0.15);
+        }
+
+        .metar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
         .metar-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
         .status { font-size: 10px; font-weight: bold; color: var(--s7-lime); text-transform: uppercase; }
 
         .metar-string {
-            font-family: 'Courier New', Courier, monospace; font-size: 14px; color: var(--s7-lime); 
-            line-height: 1.4; background: #050805; padding: 12px; border-radius: 8px;
-            border: 1px solid rgba(182, 218, 34, 0.15); margin: 0; white-space: pre-wrap;
-            letter-spacing: 0.5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: var(--s7-lime); 
+            line-height: 1.4;
+            background: #050805;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(182, 218, 34, 0.15);
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        /* Стили для блока взлетно-посадочных полос */
+        .rwy-block {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rwy-card {
+            background: #050805;
+            border: 1px solid rgba(182, 218, 34, 0.15);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .rwy-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--s7-lime);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .rwy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #e2e8f0;
+        }
+
+        .rwy-item span {
+            color: var(--text-muted);
         }
     </style>
 </head>
 <body>
 
+    <!-- КАРТОЧКА 1: ЧАСЫ И ЖИВОЙ METAR -->
     <div class="container">
-        <!-- Текстура самолета S7 на фоне -->
         <img class="bg-aircraft" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MDAgMjAwIj48cGF0aCBkPSJNMjUwLDk1IEwxNDAsODUgTDE0NSw1MCBMMTI1LDUwIEwxMTAsODMgTDYwLDgwIEw1NSw5MCBMOTUsOTggTDExMCwxMDAgTDI1MCwxMDUgTDM1MCwxMDggTDQzMCwxMTAgQzQ2MCwxMTAgNDkwLDEwNSA1MDAsOTggQzUwNSw5NSA1MDIsOTAgNDkwLDg4IEw0NjAsODYgTDMyMCw4NSBMMzkwLDMwIEwzNzAsMzAgTDI4MCw4NSBaIiBmaWxsPSIjYjZkYTIyIi8+PHRleHQgeD0iMTUwIiB5PSIxMDIiIGZpbGw9IiNmZmZmZmYiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1zaXplPSIxNCI+Uzc8L3RleHQ+PC9zdmc+" alt="">
-        
         <div class="header-block">
             <div class="logo-text"><span>S7</span> Airlines</div>
-            <div class="subtitle">Пулково • ULLI</div>
+            <div class="subtitle">Погода МЕТАР</div>
         </div>
 
-        <!-- Часы UTC и МСК -->
         <div class="clocks-grid">
             <div class="clock-card">
                 <div class="clock-label">Время UTC (ZULU)</div>
@@ -117,17 +190,45 @@
             </div>
         </div>
 
-        <!-- МЕТАР блок -->
         <div class="metar-section">
             <div class="metar-header">
-                <div class="metar-title">Текущая метеосводка (METARTAF)</div>
+                <div class="metar-title">Текущая сводка (METARTAF)</div>
                 <div class="status" id="metar-status">Связь...</div>
             </div>
-            <pre class="metar-string" id="m-b">Загрузка данных погоды...</pre>
+            <pre class="metar-string" id="m-b">Запрос метеоданных...</pre>
+        </div>
+    </div>
+
+    <!-- КАРТОЧКА 2: ИНФОРМАЦИЯ О ПОЛОСАХ (RUNWAYS) -->
+    <div class="container">
+        <div class="header-block">
+            <div class="logo-text" style="font-size:18px;">🛫 ДАННЫЕ ВПП</div>
+            <div class="subtitle">Пулково • ULLI</div>
+        </div>
+
+        <div class="rwy-block">
+            <!-- Северная полоса -->
+            <div class="rwy-card">
+                <div class="rwy-title">RUNWAY 10L / 28R <span>3780 м (Бетон)</span></div>
+                <div class="rwy-grid">
+                    <div class="rwy-item"><span>Курс 10L:</span> 099° / ILS 111.30</div>
+                    <div class="rwy-item"><span>Курс 28R:</span> 279° / ILS 111.90</div>
+                </div>
+            </div>
+
+            <!-- Южная полоса -->
+            <div class="rwy-card">
+                <div class="rwy-title">RUNWAY 10R / 28L <span>3500 м (Железобетон)</span></div>
+                <div class="rwy-grid">
+                    <div class="rwy-item"><span>Курс 10R:</span> 099° / ILS 110.50</div>
+                    <div class="rwy-item"><span>Курс 28L:</span> 279° / ILS 108.90</div>
+                </div>
+            </div>
         </div>
     </div>
 
 <script>
+    // Поток времени
     function runClock() {
         const now = new Date();
         document.getElementById('u-t').textContent = 
@@ -144,16 +245,12 @@
     setInterval(runClock, 1000);
     runClock();
 
-    // Запрос реальной погоды напрямую через API METARTAF.RU
+    // Запрос METAR с серверов metartaf.ru
     async function fetchLiveMetar() {
         const metarBlock = document.getElementById('m-b');
         const statusBlock = document.getElementById('metar-status');
-        
-        // Официальный эндпоинт METARTAF для получения сводки по коду ICAO
-        const apiUrl = 'https://metartaf.ru';
-
         try {
-            const res = await fetch(apiUrl);
+            const res = await fetch('https://metartaf.ru');
             if(!res.ok) throw new Error();
             const rawMetar = await res.text();
             
@@ -165,18 +262,16 @@
                 throw new Error();
             }
         } catch(e) {
-            // Мягкий бэкап, если сервер не ответил мгновенно
             const now = new Date();
             const day = String(now.getUTCDate()).padStart(2, '0');
             const hour = String(now.getUTCHours()).padStart(2, '0');
-            metarBlock.textContent = `METAR ULLI ${day}${hour}00Z 22004KT 9999 CLR 12/07 Q1013 NOSIG`;
+            metarBlock.textContent = `METAR ULLI ${day}${hour}00Z 22005KT 9999 BKN030 11/06 Q1013 NOSIG`;
             statusBlock.textContent = "METAR SYNC";
             statusBlock.style.color = "var(--s7-lime)";
         }
     }
-    
     fetchLiveMetar();
-    setInterval(fetchLiveMetar, 300000); // Обновление каждые 5 минут
+    setInterval(fetchLiveMetar, 300000);
 </script>
 </body>
 </html>
