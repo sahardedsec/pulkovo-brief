@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>S7 Airlines | Пулково (LED) — METAR + Megaton Cafe Radio</title>
+    <title>S7 Airlines | Пулково (LED) — METAR + Радио</title>
     <style>
         * {
             margin: 0;
@@ -222,6 +222,22 @@
             transform: scale(1.05);
         }
 
+        .station-select {
+            background: var(--metar-bg);
+            border: 1px solid var(--border-dim);
+            padding: 10px 16px;
+            border-radius: 40px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 500;
+            min-width: 220px;
+        }
+
+        .station-select:hover {
+            border-color: var(--s7-lime);
+        }
+
         .radio-info {
             flex: 1;
         }
@@ -390,6 +406,7 @@
             .clock-value { font-size: 0.9rem; }
             .raw-metar { font-size: 0.7rem; padding: 16px; margin: 16px; }
             .radio-player { flex-direction: column; align-items: flex-start; }
+            .station-select { width: 100%; }
         }
     </style>
 </head>
@@ -419,24 +436,29 @@
         </button>
     </div>
 
-    <!-- Megaton Cafe Radio -->
+    <!-- Радио плеер с выбором станций -->
     <div class="radio-card">
         <div class="radio-header">
-            <h3>🎵 Megaton Cafe Radio</h3>
+            <h3>🎵 S7 Lounge Radio</h3>
         </div>
         <div class="radio-player">
             <div class="radio-controls">
                 <button class="play-pause-btn" id="playPauseBtn">▶</button>
+                <select id="stationSelect" class="station-select">
+                    <option value="https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream">🎷 Megaton Cafe Radio — Jazz, Swing, Vintage</option>
+                    <option value="https://az1.mediacp.eu/listen/airport-lounge-radio/stream/1/">✈️ Airport Lounge Radio — Ambient, Lounge, Chillout</option>
+                    <option value="http://emgspb.hostingradio.ru:80/europaplusspb128.mp3">🎧 Europa Plus Санкт-Петербург — Dance, Pop, Hit</option>
+                </select>
                 <div class="radio-info">
                     <div class="station-name">
-                        🎷 Megaton Cafe Radio — Jazz, Swing, Vintage
+                        <span id="currentStationName">Megaton Cafe Radio</span>
                         <span class="radio-status">
                             <span class="status-dot" id="statusDot"></span>
                             <span id="statusText">Остановлено</span>
                         </span>
                     </div>
                     <div class="station-desc" style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 4px;">
-                        Музыка 1920-1960х годов • Атмосфера ретро-путешествий
+                        🎶 Выберите радиостанцию для создания идеальной атмосферы
                     </div>
                 </div>
             </div>
@@ -459,7 +481,7 @@
         </div>
         
         <div class="raw-metar" id="metarRaw">
-            ⏳ Получение данных...
+            ⏳ Получение данных с aviationweather.gov...
         </div>
         
         <button class="refresh-btn" id="refreshMetar">
@@ -469,7 +491,7 @@
 
     <footer>
         <div class="footer-badge">✈️ S7 Airlines | Точная авиаметеосводка</div>
-        <div class="footer-badge">🎵 Megaton Cafe Radio</div>
+        <div class="footer-badge">🎵 Megaton Cafe • Airport Lounge • Europa Plus</div>
         <div class="footer-badge">🔄 METAR обновляется каждые 10 минут</div>
     </footer>
 </div>
@@ -512,23 +534,30 @@
     setInterval(updateClocks, 1000);
     updateClocks();
 
-    // ======================= РАДИО =======================
+    // ======================= РАДИО ПЛЕЕР С ТРЕМЯ СТАНЦИЯМИ =======================
     const audio = new Audio();
-    audio.src = 'https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream';
-    
     let isPlaying = false;
+    let currentStationUrl = "https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream";
     
     const playPauseBtn = document.getElementById('playPauseBtn');
     const statusText = document.getElementById('statusText');
     const statusDot = document.getElementById('statusDot');
     const volumeSlider = document.getElementById('volumeSlider');
+    const stationSelect = document.getElementById('stationSelect');
+    const currentStationNameSpan = document.getElementById('currentStationName');
     
     audio.volume = 0.5;
+    
+    const stationNames = {
+        "https://us2.internet-radio.com/proxy/megatoncafe?mp=/stream": "Megaton Cafe Radio",
+        "https://az1.mediacp.eu/listen/airport-lounge-radio/stream/1/": "Airport Lounge Radio",
+        "http://emgspb.hostingradio.ru:80/europaplusspb128.mp3": "Europa Plus Санкт-Петербург"
+    };
     
     function updateRadioUI() {
         if (isPlaying) {
             playPauseBtn.innerHTML = '⏸';
-            statusText.innerHTML = 'В эфире 🎷';
+            statusText.innerHTML = 'В эфире 🎧';
             statusDot.classList.add('playing');
         } else {
             playPauseBtn.innerHTML = '▶';
@@ -536,6 +565,34 @@
             statusDot.classList.remove('playing');
         }
     }
+    
+    function changeStation() {
+        const wasPlaying = isPlaying;
+        
+        if (wasPlaying) {
+            audio.pause();
+        }
+        
+        currentStationUrl = stationSelect.value;
+        audio.src = currentStationUrl;
+        currentStationNameSpan.textContent = stationNames[currentStationUrl] || "Радио";
+        
+        if (wasPlaying) {
+            audio.play().then(() => {
+                isPlaying = true;
+                updateRadioUI();
+            }).catch(() => {
+                isPlaying = false;
+                updateRadioUI();
+                statusText.innerHTML = 'Ошибка';
+                setTimeout(() => {
+                    if (!isPlaying) statusText.innerHTML = 'Остановлено';
+                }, 2000);
+            });
+        }
+    }
+    
+    stationSelect.addEventListener('change', changeStation);
     
     playPauseBtn.addEventListener('click', () => {
         if (isPlaying) {
@@ -547,7 +604,7 @@
                 isPlaying = true;
                 updateRadioUI();
             }).catch(() => {
-                statusText.innerHTML = 'Ошибка';
+                statusText.innerHTML = 'Ошибка потока';
                 setTimeout(() => {
                     if (!isPlaying) statusText.innerHTML = 'Остановлено';
                 }, 2000);
@@ -565,84 +622,41 @@
         updateRadioUI();
     });
     
+    audio.addEventListener('error', () => {
+        isPlaying = false;
+        updateRadioUI();
+        statusText.innerHTML = 'Ошибка потока';
+        setTimeout(() => {
+            if (!isPlaying) statusText.innerHTML = 'Остановлено';
+        }, 3000);
+    });
+    
     volumeSlider.addEventListener('input', (e) => {
         audio.volume = e.target.value / 100;
     });
     
     updateRadioUI();
 
-    // ======================= METAR (несколько источников для мобильных устройств) =======================
-    async function fetchMETARWithRetry(url, retries = 2) {
-        for (let i = 0; i <= retries; i++) {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                if (data && data.contents) {
-                    return JSON.parse(data.contents);
-                }
-                if (data && data.data) return data;
-                if (data && data.metar) return data;
-            } catch (e) {
-                if (i === retries) throw e;
-                await new Promise(r => setTimeout(r, 1000));
-            }
-        }
-        throw new Error('All retries failed');
-    }
-
+    // ======================= METAR =======================
     async function fetchMETAR() {
         const metarDiv = document.getElementById('metarRaw');
         const timeSpan = document.getElementById('metarTimeStamp');
         
         metarDiv.innerHTML = '⏳ Загрузка METAR... ✈️';
         
-        // Список источников для мобильных устройств
-        const sources = [
-            'https://api.allorigins.win/get?url=' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json'),
-            'https://corsproxy.io/?' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json')
-        ];
-        
-        let metarData = null;
-        let lastError = null;
-        
-        for (const source of sources) {
-            try {
-                const response = await fetch(source);
-                const data = await response.json();
-                
-                if (data && data.contents) {
-                    metarData = JSON.parse(data.contents);
-                    if (metarData && metarData[0]) break;
-                } else if (data && data[0]) {
-                    metarData = data;
-                    break;
-                }
-            } catch (e) {
-                lastError = e;
-                continue;
-            }
-        }
-        
-        // Если не удалось через прокси, пробуем прямой JSONP запрос
-        if (!metarData || !metarData[0]) {
-            try {
-                const directUrl = 'https://aviationweather.gov/cgi-bin/data/metar.php?ids=ULLI&format=json';
-                const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(directUrl));
-                const data = await response.json();
-                if (data.contents) {
-                    metarData = JSON.parse(data.contents);
-                }
-            } catch (e) {
-                lastError = e;
-            }
-        }
-        
-        if (metarData && metarData[0]) {
-            const metar = metarData[0];
-            const rawMetar = metar.rawOb || metar.metar || 'Данные отсутствуют';
+        try {
+            const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://aviationweather.gov/api/data/metar?ids=ULLI&format=json');
+            const response = await fetch(url);
+            const proxyData = await response.json();
             
-            // Парсим время из METAR
+            if (!proxyData.contents) throw new Error('Нет данных');
+            
+            const metarData = JSON.parse(proxyData.contents);
+            if (!metarData || metarData.length === 0) throw new Error('METAR не найден');
+            
+            const metar = metarData[0];
+            const rawMetar = metar.rawOb || 'Данные отсутствуют';
+            
             let timeStr = '';
             const timeMatch = rawMetar.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
             if (timeMatch) {
@@ -659,8 +673,10 @@
             
             metarDiv.innerHTML = `<span style="color: var(--s7-lime); font-weight: 700;">✈️ METAR ULLI</span><br><strong style="font-size: 0.9rem;">${rawMetar}</strong>`;
             timeSpan.innerHTML = `🕒 сводка от ${timeStr}`;
-        } else {
-            throw new Error('Не удалось получить METAR');
+            
+        } catch (error) {
+            metarDiv.innerHTML = '<span class="error-text">❌ Ошибка загрузки METAR</span>';
+            timeSpan.innerHTML = '🕒 ошибка';
         }
     }
     
@@ -669,32 +685,16 @@
         const originalText = btn.innerHTML;
         btn.innerHTML = '🔄 Обновление...';
         btn.disabled = true;
-        try {
-            await fetchMETAR();
-        } catch (e) {
-            document.getElementById('metarRaw').innerHTML = '<span class="error-text">❌ Ошибка загрузки METAR. Проверьте интернет.</span>';
-        }
+        await fetchMETAR();
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
     
-    // Загружаем METAR с повторной попыткой при ошибке
-    async function loadMETARWithRetry() {
-        try {
-            await fetchMETAR();
-        } catch (e) {
-            console.error('METAR error:', e);
-            setTimeout(() => {
-                fetchMETAR().catch(() => {
-                    document.getElementById('metarRaw').innerHTML = '<span class="error-text">❌ Ошибка загрузки METAR. Проверьте соединение.</span>';
-                });
-            }, 2000);
-        }
-    }
-    
-    loadMETARWithRetry();
+    fetchMETAR();
     document.getElementById('refreshMetar').addEventListener('click', refreshMETAR);
-    setInterval(() => loadMETARWithRetry(), 600000);
+    setInterval(fetchMETAR, 600000);
 </script>
+</body>
+</html>
 </body>
 </html>
