@@ -1,286 +1,189 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>S7 Airlines • METAR ULLI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S7 Dispatch - Real-time Pulkovo Info</title>
+    <!-- Tailwind CSS -->
+    <script src="https://tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        s7green: '#c4d600',
+                        s7dark: '#1c3511',
+                        s7cardDark: '#233f17',
+                        s7cardLight: '#f4f7f2',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --s7-lime: #c4e01a;       
-            --bg-color: #0b130a;       
-            --card-bg: #162414;        
-            --text-main: #ffffff;
-            --text-muted: #8fa48c;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 15px;
-        }
-
-        .container {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 22px;
-            max-width: 550px;
-            margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(182, 218, 34, 0.1);
-            position: relative;
-            overflow: hidden; 
-        }
-
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--s7-lime);
-            border-radius: 16px 16px 0 0;
-            z-index: 10;
-        }
-
-        /* Силуэт самолета S7, вшитый прямо в код */
-        .bg-aircraft {
-            position: absolute;
-            bottom: -5px;
-            right: -20px;
-            width: 320px; 
-            height: auto;
-            opacity: 0.18; /* Оптимальная прозрачность для читаемости */
-            pointer-events: none; 
-            z-index: 1;
-        }
-
-        .header-block, .clocks-grid, .metar-section, .deco-grid {
-            position: relative;
-            z-index: 5;
-        }
-
-        .header-block {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .logo-text {
-            font-size: 22px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: -0.5px;
-        }
-
-        .logo-text span {
-            color: var(--s7-lime);
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            margin: 0;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .clocks-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .clock-card {
-            background: rgba(11, 19, 10, 0.7);
-            padding: 12px;
-            border-radius: 10px;
-            border-left: 4px solid var(--s7-lime);
-        }
-
-        .clock-card.local {
-            border-left-color: #ffffff;
-        }
-
-        .clock-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-
-        .clock-time {
-            font-size: 20px;
-            font-weight: 700;
-            font-family: monospace;
-        }
-
-        .metar-section {
-            background: rgba(11, 19, 10, 0.85);
-            border-radius: 10px;
-            padding: 12px;
-            border: 1px solid rgba(182, 218, 34, 0.15);
-            margin-bottom: 15px;
-        }
-
-        .metar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .metar-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .status {
-            font-size: 10px;
-            font-weight: bold;
-            color: var(--s7-lime);
-            text-transform: uppercase;
-        }
-
-        .metar-string {
+        .font-mono-digital {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            color: var(--s7-lime); 
-            line-height: 1.4;
-            background: #050805;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(182, 218, 34, 0.15);
-            margin: 0;
-            white-space: pre-wrap;
-        }
-
-        .deco-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .deco-card {
-            background: rgba(11, 19, 10, 0.6);
-            border: 1px solid rgba(182, 218, 34, 0.1);
-            padding: 12px;
-            border-radius: 10px;
-        }
-
-        .deco-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-bottom: 3px;
-            text-transform: uppercase;
-        }
-
-        .deco-value {
-            font-size: 15px;
-            font-weight: 700;
         }
     </style>
 </head>
-<body>
+<body class="bg-s7dark text-white dark:bg-s7dark dark:text-white bg-slate-100 text-slate-900 transition-colors duration-200 min-h-screen">
 
-<div class="container">
-    <!-- Самолет S7, закодированный в Base64. Он загрузится мгновенно без блокировок Google -->
-    <img class="bg-aircraft" src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 600 200'><path d='M250,95 L140,85 L145,50 L125,50 L110,83 L60,80 L55,90 L95,98 L110,100 L250,105 L350,108 L430,110 C460,110 490,105 500,98 C505,95 502,90 490,88 L460,86 L320,85 L390,30 L370,30 L280,85 Z' fill='%23b6da22'/><text x='150' y='102' fill='%23ffffff' font-family='sans-serif' font-weight='bold' font-size='14'>S7</text></svg>" alt="">
-
-    <!-- Шапка -->
-    <div class="header-block">
-        <div class="logo-text"><span>S7</span> Airlines</div>
-        <div class="subtitle">Пулково • ULLI</div>
-    </div>
-
-    <!-- Часы -->
-    <div class="clocks-grid">
-        <div class="clock-card">
-            <div class="clock-label">Время UTC (ZULU)</div>
-            <div class="clock-time" id="u-t">00:00:00</div>
+    <!-- Хедер -->
+    <header class="border-b border-gray-700 dark:border-gray-700 border-gray-300 p-4 flex justify-between items-center bg-opacity-50 backdrop-blur-md">
+        <div class="flex items-center gap-4">
+            <span class="text-2xl font-black tracking-wider text-s7green dark:text-s7green text-green-700">S7 Airlines</span>
+            <span class="text-xs uppercase tracking-widest text-gray-400 font-bold">Пулково • ULLI (Реальное табло)</span>
         </div>
-        <div class="clock-card local">
-            <div class="clock-label">Местное время (MSK)</div>
-            <div class="clock-time" id="l-t">00:00:00</div>
-        </div>
-    </div>
+        <button id="themeToggle" class="px-4 py-2 rounded-full border border-s7green text-s7green font-medium hover:bg-s7green hover:text-black transition-all text-sm">
+            Светлая тема
+        </button>
+    </header>
 
-    <!-- METAR блок -->
-    <div class="metar-section">
-        <div class="metar-header">
-            <div class="metar-title">Текущий METAR</div>
-            <div class="status">S7 Dispatch</div>
-        </div>
-        <pre class="metar-string" id="m-b">Синхронизация...</pre>
-    </div>
+    <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
 
-    <!-- Карточки расшифровки -->
-    <div class="deco-grid">
-        <div class="deco-card">
-            <div class="deco-label">Ветер на ВПП</div>
-            <div class="deco-value" id="d-w">220° / 09 KT</div>
-        </div>
-        <div class="deco-card">
-            <div class="deco-label">Температура воздуха</div>
-            <div class="deco-value" id="d-t">+11 °C</div>
-        </div>
-    </div>
-</div>
+        <!-- Секция 1: Время и Радио -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl border border-gray-700 dark:border-gray-700 border-gray-200 dark:bg-s7cardDark bg-s7cardLight">
+                <div class="text-xs text-gray-400 font-bold uppercase">Время UTC (ULLI)</div>
+                <div id="utcTime" class="text-3xl font-bold font-mono-digital text-s7green dark:text-s7green text-green-600 mt-1">00:00:00</div>
+            </div>
 
-<script>
-    function updateSite() {
-        const now = new Date();
+            <div class="p-4 rounded-xl border border-gray-700 dark:border-gray-700 border-gray-200 dark:bg-s7cardDark bg-s7cardLight">
+                <div class="text-xs text-gray-400 font-bold uppercase">Местное время (MSK)</div>
+                <div id="localTime" class="text-3xl font-bold font-mono-digital text-s7green dark:text-s7green text-green-600 mt-1">00:00:00</div>
+            </div>
+
+            <div class="p-4 rounded-xl border border-gray-700 dark:border-gray-700 border-gray-200 dark:bg-s7cardDark bg-s7cardLight flex flex-col justify-between">
+                <div class="text-xs text-gray-400 font-bold uppercase mb-1">Радио поток</div>
+                <div class="flex items-center gap-3">
+                    <button id="playBtn" class="w-10 h-10 rounded-full bg-s7green text-black font-bold flex items-center justify-center hover:scale-105 transition-transform">▶</button>
+                    <div class="text-sm">
+                        <div class="font-bold">Europa Plus SPB</div>
+                        <div class="text-xs text-gray-400" id="streamStatus">Остановлено</div>
+                    </div>
+                </div>
+                <audio id="radioAudio" src="http://hostingradio.ru" preload="none"></audio>
+            </div>
+        </div>
+
+        <!-- Секция 2: METAR -->
+        <div class="p-5 rounded-xl border border-gray-700 dark:border-gray-700 border-gray-200 dark:bg-s7cardDark bg-s7cardLight space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Текущий METAR</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-s7green text-black">S7 DISPATCH</span>
+            </div>
+            <div class="p-3 bg-black rounded font-mono text-s7green dark:text-s7green text-green-400 text-sm overflow-x-auto tracking-wide whitespace-nowrap">
+                METAR ULLI 311000Z 22009KT 9999 BKN030 11/06 Q1013 NOSIG
+            </div>
+            <div class="grid grid-cols-2 gap-4 pt-2 text-sm border-t border-gray-700 dark:border-gray-700 border-gray-200">
+                <div>
+                    <span class="text-gray-400 block text-xs uppercase">Ветер на ВПП</span>
+                    <span class="font-bold">220° / 9 KT</span> <span class="text-xs text-gray-400">(5 м/с)</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-xs uppercase">Температура воздуха</span>
+                    <span class="font-bold text-s7green dark:text-s7green text-green-600">+11 °C</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Секция 3: Реальное онлайн-табло -->
+        <div class="p-5 rounded-xl border border-gray-700 dark:border-gray-700 border-gray-200 dark:bg-s7cardDark bg-s7cardLight space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 dark:border-gray-700 border-gray-200 pb-2">
+                <h2 class="text-lg font-bold tracking-wide">Живое табло S7 Airlines (Пулково)</h2>
+                <div class="flex gap-2 text-xs">
+                    <button id="showDepartures" class="px-3 py-1.5 rounded font-bold bg-s7green text-black">Вылет</button>
+                    <button id="showArrivals" class="px-3 py-1.5 rounded font-bold bg-gray-700 text-white dark:bg-gray-700 bg-gray-200 dark:text-white text-gray-800">Прилет</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="text-gray-400 uppercase text-xs border-b border-gray-700 dark:border-gray-700 border-gray-200">
+                            <th class="pb-2 font-bold">Рейс</th>
+                            <th class="pb-2 font-bold">Направление / Откуда</th>
+                            <th class="pb-2 font-bold">Время (План)</th>
+                            <th class="pb-2 font-bold">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="flightsTableBody" class="divide-y divide-gray-700 dark:divide-gray-700 divide-gray-200">
+                        <tr>
+                            <td colspan="4" class="py-4 text-center text-gray-400 animate-pulse">Загрузка реального расписания рейсов...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Тема
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        themeToggle.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                themeToggle.textContent = 'Темная тема';
+            } else {
+                html.classList.add('dark');
+                themeToggle.textContent = 'Светлая тема';
+            }
+        });
+
+        // Часы
+        function updateClocks() {
+            const now = new Date();
+            document.getElementById('utcTime').textContent = now.toISOString().substr(11, 8);
+            const mskTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+            document.getElementById('localTime').textContent = mskTime.toISOString().substr(11, 8);
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // Аудиоплеер
+        const audio = document.getElementById('radioAudio');
+        const playBtn = document.getElementById('playBtn');
+        const streamStatus = document.getElementById('streamStatus');
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play().then(() => {
+                    playBtn.textContent = '⏸';
+                    streamStatus.textContent = 'В эфире';
+                    streamStatus.classList.add('text-s7green');
+                }).catch(err => console.error(err));
+            } else {
+                audio.pause();
+                playBtn.textContent = '▶';
+                streamStatus.textContent = 'Остановлено';
+                streamStatus.classList.remove('text-s7green');
+            }
+        });
+
+        // --- ЛОГИКА СИНХРОНИЗАЦИИ С РЕАЛЬНЫМ РАСПИСАНИЕМ ЯНДЕКСА ---
         
-        const uH = String(now.getUTCHours()).padStart(2, '0');
-        const uM = String(now.getUTCMinutes()).padStart(2, '0');
-        const uS = String(now.getUTCSeconds()).padStart(2, '0');
-        document.getElementById('u-t').textContent = `${uH}:${uM}:${uS}`;
-
-        const utcTimestamp = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const msk = new Date(utcTimestamp + 10800000); 
-        const lH = String(msk.getHours()).padStart(2, '0');
-        const lM = String(msk.getMinutes()).padStart(2, '0');
-        const lS = String(msk.getSeconds()).padStart(2, '0');
-        document.getElementById('l-t').textContent = `${lH}:${lM}:${lS}`;
-
-        const day = String(now.getUTCDate()).padStart(2, '0');
-        const hour = String(now.getUTCHours()).padStart(2, '0');
-        const minutesRaw = now.getUTCMinutes();
-        const min = minutesRaw >= 30 ? "30" : "00";
+        // ВСТАВЬТЕ СВОЙ БЕСПЛАТНЫЙ КЛЮЧ СЮДА:
+        const YANDEX_API_KEY = 'VAШ_БЕСПЛАТНЫЙ_КЛЮЧ_ЯНДЕКС_API'; 
+        const STATION_PULKOVO = 's9600366'; // Код Пулково в системе Яндекса
         
-        const currentHour = now.getHours();
-        
-        const tempBase = 11; // Ставим текущие +11°C со скриншота для точности
-        const temp = Math.round(tempBase);
-        const dewPoint = Math.round(tempBase - 5);
-        const windDir = 220; 
-        const windSpeedKnots = 9; 
-        const windSpeedMs = 5;
-        const qnh = 1013;
+        let currentMode = 'departure'; // 'departure' или 'arrival'
+        const tableBody = document.getElementById('flightsTableBody');
 
-        const windStr = `${String(windDir).padStart(3, '0')}${String(windSpeedKnots).padStart(2, '0')}KT`;
-        const tempStr = `${String(temp).padStart(2, '0')}/${String(dewPoint).padStart(2, '0')}`;
-        
-        document.getElementById('m-b').textContent = `METAR ULLI ${day}${hour}${min}Z ${windStr} 9999 BKN030 ${tempStr} Q${qnh} NOSIG`;
-        document.getElementById('d-w').innerHTML = `${windDir}° / <span style="color:var(--s7-lime);">${windSpeedKnots} KT</span> <small style="color:var(--text-muted); font-weight:normal;">(${windSpeedMs} м/с)</small>`;
-        document.getElementById('d-t').textContent = `${temp > 0 ? '+' : ''}${temp} °C`;
-    }
+        async function loadRealFlightSchedule() {
+            if (YANDEX_API_KEY === 'VAШ_БЕСПЛАТНЫЙ_КЛЮЧ_ЯНДЕКС_API') {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-red-400 font-bold">Ошибка: Не указан API-ключ в коде скрипта (строка 177)!</td></tr>`;
+                return;
+            }
 
-    updateSite();
-    setInterval(updateSite, 1000);
-</script>
+            try {
+                // Запрос к API Яндекс.Расписаний (используем CORS-прокси, чтобы обойти ограничения браузера)
+                const targetUrl = `https://yandex.net{YANDEX_API_KEY}&station=${STATION_PULKOVO}&transport_types=plane&direction=${currentMode}`;
+                const proxyUrl = `https://allorigins.win{encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                const outerData = await response.json();
+                const data = JSON.parse(outerData.contents);
 
-</body>
-</html>
-
-
-
-
-
+                // Фильтруем данные: ищем только рейсы S7 Airlines (Сибирь)
